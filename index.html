@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>證照管理系統</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f5f6f8;--card:#fff;--ink:#1d2433;--sub:#667085;--line:#e4e7ec;--pri:#2f6fed;--pri-soft:#e8f0fe;--ok:#12805c;--ok-soft:#e3f5ee;--warn:#b54708;--warn-soft:#fef0e1;--bad:#c4320a;--bad-soft:#fde8e4;--r:12px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Noto Sans TC",system-ui,-apple-system,sans-serif;font-size:14px;line-height:1.5}
+button,input,select,textarea{font:inherit;color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 20px 60px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between;margin-bottom:12px}
+h1{font-size:22px;margin:0;font-weight:700}
+.privacy{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#eef4ff;border:1px solid #d3e1fd;color:#24408e;border-radius:10px;padding:8px 12px;font-size:12.5px;margin-bottom:16px}
+.privacy.warn{background:var(--warn-soft);border-color:#f7d4ae;color:var(--warn)}
+.privacy b{font-weight:700}
+.privacy .sp{flex:1}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;cursor:pointer;white-space:nowrap}
+.btn:hover{background:#f2f4f7}
+.btn.pri{background:var(--pri);color:#fff;border-color:var(--pri)}
+.btn.pri:hover{filter:brightness(.95)}
+.btn.sm{padding:4px 9px;font-size:12.5px}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.ghost:hover{background:#eef0f3}
+.btn.danger{color:var(--bad)}
+.btn.dangerfill{background:var(--bad);border-color:var(--bad);color:#fff}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.stat .k{color:var(--sub);font-size:12.5px}
+.stat .v{font-size:24px;font-weight:700;margin-top:2px}
+.stat .v small{font-size:13px;font-weight:500;color:var(--sub)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:16px}
+.tab{padding:9px 14px;border:none;background:none;cursor:pointer;color:var(--sub);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab.on{color:var(--pri);border-bottom-color:var(--pri);font-weight:500}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.fchip{border:1px solid var(--line);background:#fff;border-radius:99px;padding:4px 12px;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;gap:6px}
+.fchip.on{border-color:var(--ink);background:var(--ink);color:#fff}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.group{margin-bottom:22px}
+.group h2{font-size:15px;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.group h2 .meta{font-weight:400}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:10px;border-top:4px solid var(--cc,#d0d5dd)}
+.card h3{margin:0;font-size:16px}
+.meta{color:var(--sub);font-size:12.5px}
+.pill{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;font-weight:500;white-space:nowrap}
+.p-ok{background:var(--ok-soft);color:var(--ok)}
+.p-warn{background:var(--warn-soft);color:var(--warn)}
+.p-bad{background:var(--bad-soft);color:var(--bad)}
+.p-none{background:#f2f4f7;color:var(--sub)}
+.bar{height:9px;background:#eef0f3;border-radius:99px;overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--pri);border-radius:99px}
+.bar.done>i{background:var(--ok)}
+.bar.sm{height:6px}
+.hrs{display:flex;justify-content:space-between;align-items:baseline}
+.hrs b{font-size:20px}
+.cats{display:flex;flex-direction:column;gap:6px;border-top:1px dashed var(--line);padding-top:8px}
+.cat{display:grid;grid-template-columns:1fr 90px;gap:8px;align-items:center;font-size:12.5px}
+.cat .lab{display:flex;justify-content:space-between;gap:6px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:12.5px}
+.kv dt{color:var(--sub)}.kv dd{margin:0}
+.card .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:auto;padding-top:4px}
+.empty{background:var(--card);border:1px dashed var(--line);border-radius:var(--r);padding:36px;text-align:center;color:var(--sub)}
+.welcome{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:28px;max-width:640px;margin:10px auto}
+.welcome h2{margin:0 0 8px;font-size:18px}
+.welcome ul{padding-left:20px;margin:10px 0 18px;color:#344054}
+.welcome li{margin:4px 0}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:#f9fafb;font-weight:500;color:var(--sub);font-size:12.5px;white-space:nowrap}
+td.num,th.num{text-align:right;white-space:nowrap}
+tfoot td{font-weight:700;background:#f9fafb}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;background:#f2f4f7;color:#344054;border-radius:6px;padding:1px 6px;margin:1px 3px 1px 0}
+.tag{font-size:11.5px;color:var(--sub);display:inline-flex;align-items:center;gap:5px}
+.tablewrap{overflow-x:auto}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+select,input[type=text],input[type=date],input[type=number],textarea{border:1px solid var(--line);border-radius:8px;padding:7px 9px;background:#fff;width:100%}
+input[type=color]{width:36px;height:34px;padding:2px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer}
+.filters select,.filters input{width:auto}
+textarea{min-height:70px;resize:vertical}
+.modal-bg{position:fixed;inset:0;background:rgba(16,24,40,.45);display:flex;align-items:flex-start;justify-content:center;padding:40px 14px;overflow:auto;z-index:20}
+.modal{background:#fff;border-radius:14px;width:100%;max-width:580px;padding:20px 22px;box-shadow:0 20px 50px rgba(0,0,0,.2)}
+.modal h2{margin:0 0 14px;font-size:18px}
+.modal h3{font-size:14px;margin:18px 0 4px}
+.f{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px}
+.f label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--sub)}
+.f .full{grid-column:1/-1}
+.hint{font-size:11.5px;color:var(--sub)}
+.checks{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--ink)}
+.checks label{display:flex;flex-direction:row;align-items:center;gap:6px;color:var(--ink);font-size:13.5px}
+.catrow{display:grid;grid-template-columns:1fr 100px 32px;gap:6px;margin-bottom:6px}
+.setrow{display:grid;grid-template-columns:36px 1fr auto 32px;gap:6px;margin-bottom:6px;align-items:center}
+.setrow.nocolor{grid-template-columns:1fr auto 32px}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1d2433;color:#fff;padding:9px 16px;border-radius:8px;font-size:13px;z-index:30}
+.upcoming{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:18px}
+.upcoming h4{margin:0 0 8px;font-size:14px}
+.up{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-top:1px solid var(--line);font-size:13px}
+.up:first-of-type{border-top:none}
+.box{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+@media (max-width:560px){.f{grid-template-columns:1fr}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+(function(){
+/* ===== 設定：把範本 Sheet 的「建立副本」連結貼在這裡 =====
+   做法：打開範本 Sheet → 網址中的 /edit... 改成 /copy  例：
+   https://docs.google.com/spreadsheets/d/XXXXXXXX/copy            */
+const CONFIG={templateCopyUrl:''};
+
+const LS='certmgr-v2', LS_URL='certmgr-sheet-url';
+const COLORS=['#2f6fed','#12805c','#c4320a','#7a5af8','#b54708','#0e9384','#dd2590','#667085'];
+const defCertCats=()=>[{id:'g1',name:'運動指導',color:'#2f6fed'},{id:'g2',name:'急救救生',color:'#c4320a'},{id:'g3',name:'醫療防護',color:'#12805c'},{id:'g4',name:'其他',color:'#667085'}];
+const defCeCats=()=>[{id:'k1',name:'專業課程'},{id:'k2',name:'一般課程'},{id:'k3',name:'法規／倫理'}];
+const blank=()=>({certs:[],records:[],certCats:defCertCats(),ceCats:defCeCats(),lastBackup:'',updatedAt:''});
+let S=blank(), storageOK=true, tab='overview', fCert='', fYear='', fCe='', fGroup='';
+/* mode: 'local'＝只存本機；'sheet'＝連結 Google Sheet */
+let mode='local', sheetUrl='', sheetLink='', sync='idle', syncAt='', syncErr='', pushing=false, dirty=false, pushTimer=null;
+
+/* ---------- 本機 ---------- */
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,v);return true}catch(e){return false}}
+function lsDel(k){try{localStorage.removeItem(k)}catch(e){}}
+function localData(){try{const raw=localStorage.getItem(LS);return raw?normalize(JSON.parse(raw)):null}catch(e){return null}}
+function normalize(o){
+  const s={certs:Array.isArray(o.certs)?o.certs:[],records:Array.isArray(o.records)?o.records:[],
+    certCats:Array.isArray(o.certCats)?o.certCats:defCertCats(),ceCats:Array.isArray(o.ceCats)?o.ceCats:defCeCats(),lastBackup:o.lastBackup||'',updatedAt:o.updatedAt||''};
+  s.certs.forEach(c=>{c.cats=Array.isArray(c.cats)?c.cats:[];c.catId=c.catId||'';c.certIds=undefined});
+  s.records.forEach(r=>{r.certIds=Array.isArray(r.certIds)?r.certIds:[];r.ceCatId=r.ceCatId||''});
+  return s;
+}
+const payload=()=>({certs:S.certs,records:S.records,certCats:S.certCats,ceCats:S.ceCats});
+
+/* ---------- Google Sheet ---------- */
+const validUrl=u=>/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(u.trim())||/^https:\/\/script\.google\.com\/a\/macros\/[^/]+\/s\/[\w-]+\/exec$/.test(u.trim());
+async function sheetGet(url){
+  const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),20000);
+  try{const r=await fetch(url,{signal:ctl.signal,redirect:'follow'});const j=await r.json();if(!j.ok)throw new Error(j.error||'讀取失敗');return j.data}
+  catch(e){if(e.name==='AbortError')throw new Error('連線逾時');if(e instanceof SyntaxError||/fetch|Load failed|NetworkError/i.test(e.message))throw new Error('無法讀取，請確認部署時「誰可以存取」選了「所有人」');throw e}
+  finally{clearTimeout(t)}
+}
+async function sheetPost(url,body){
+  const r=await fetch(url,{method:'POST',body:JSON.stringify(body),redirect:'follow'});  // text/plain，不觸發 CORS 預檢
+  return r.json();
+}
+function fromSheet(d){
+  const s=normalize(d);
+  if(!d.certCats?.length&&!d.ceCats?.length&&!d.certs?.length){s.certCats=defCertCats();s.ceCats=defCeCats()}
+  sheetLink=d.sheetUrl||'';return s;
+}
+function queuePush(){dirty=true;sync='pending';clearTimeout(pushTimer);pushTimer=setTimeout(push,500)}
+async function push(force){
+  if(pushing){dirty=true;return}
+  pushing=true;dirty=false;sync='saving';renderBar();
+  try{
+    const j=await sheetPost(sheetUrl,{action:'save',data:payload(),baseUpdatedAt:S.updatedAt,force:!!force});
+    if(j.ok){S.updatedAt=j.updatedAt;sync='ok';syncAt=new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}
+    else if(j.error==='conflict'){S=fromSheet(j.data);dirty=false;sync='ok';render();toast('另一台裝置剛更新過 Sheet，已載入最新資料，請再操作一次')}
+    else throw new Error(j.error);
+  }catch(e){sync='error';syncErr=e.message||'同步失敗'}
+  pushing=false;renderBar();
+  if(dirty&&sync!=='error')push();
+}
+
+/* ---------- 共用：存檔入口 ---------- */
+function save(msg){
+  if(mode==='sheet'){render();queuePush();toast(msg||'已儲存');return}
+  storageOK=lsSet(LS,JSON.stringify(S));
+  render();toast(storageOK?(msg||'已儲存'):'⚠️ 此瀏覽器無法儲存，請記得匯出備份');
+}
+function load(){
+  storageOK=lsSet(LS+'-test','1');lsDel(LS+'-test');
+  const u=lsGet(LS_URL);
+  if(u&&validUrl(u)){mode='sheet';sheetUrl=u;sync='loading';return}
+  S=localData()||blank();
+}
+async function loadSheet(){
+  sync='loading';render();
+  try{S=fromSheet(await sheetGet(sheetUrl));sync='ok';syncAt=new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})}
+  catch(e){sync='loaderror';syncErr=e.message}
+  render();
+}
+window.addEventListener('beforeunload',e=>{if(mode==='sheet'&&(pushing||dirty||sync==='pending')){e.preventDefault();e.returnValue=''}});
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9);
+const pd=s=>{if(!s)return null;const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c)};
+const today=()=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate())};
+const fmt=d=>d?`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`:'';
+const days=(a,b)=>Math.round((b-a)/864e5);
+const addYears=(s,n)=>{const d=pd(s);if(!d)return '';d.setFullYear(d.getFullYear()+n);return fmt(d)};
+const num=v=>{const n=parseFloat(v);return isFinite(n)?n:0};
+const r1=n=>Math.round(n*10)/10;
+const gcat=id=>S.certCats.find(g=>g.id===id);
+const kcat=id=>S.ceCats.find(k=>k.id===id);
+const certName=id=>(S.certs.find(c=>c.id===id)||{}).name||'(已刪除)';
+
+/* ---------- 計算 ---------- */
+function recsFor(c){
+  const s=pd(c.issueDate), e=pd(c.expiryDate);
+  return S.records.filter(r=>r.certIds.includes(c.id)).filter(r=>{const d=pd(r.date);return d&&(!s||d>=s)&&(!e||d<=e)});
+}
+function info(c){
+  const rs=recsFor(c), done=rs.reduce((a,r)=>a+num(r.hours),0), req=num(c.requiredHours);
+  const e=pd(c.expiryDate), left=e?days(today(),e):null;
+  const cats=(c.cats||[]).filter(k=>kcat(k.ceCatId)).map(k=>({name:kcat(k.ceCatId).name,req:num(k.hours),done:rs.filter(r=>r.ceCatId===k.ceCatId).reduce((a,r)=>a+num(r.hours),0)}));
+  const catsMet=cats.every(k=>k.done>=k.req);
+  const met=req>0?done>=req&&catsMet:null;
+  let st,cls;
+  if(left===null){st='未設定效期';cls='p-none'}
+  else if(left<0){st='已過期';cls='p-bad'}
+  else if(met===false&&left<=180){st='時數不足・即將到期';cls='p-bad'}
+  else if(left<=90){st=met?'已達標・待換證':'即將到期';cls='p-warn'}
+  else if(met){st='時數已達標';cls='p-ok'}
+  else{st='有效';cls='p-ok'}
+  const remain=Math.max(0,req-done);
+  const pace=(left>0&&remain>0)?remain/(left/30.44):null;
+  return {rs,done,req,remain,left,cats,met,st,cls,pace};
+}
+
+let tt;function toast(m){let el=$('.toast');if(!el){el=document.createElement('div');el.className='toast';document.body.appendChild(el)}el.textContent=m;el.style.display='block';clearTimeout(tt);tt=setTimeout(()=>el.style.display='none',2400)}
+
+/* ---------- 畫面 ---------- */
+function privacyBar(){
+  if(mode==='sheet'){
+    const st={loading:'⏳ 正在讀取你的 Google Sheet…',pending:'✏️ 等待同步…',saving:'⏳ 同步中…',ok:'✅ 已同步'+(syncAt?' '+syncAt:''),idle:'✅ 已連結',
+      error:'⚠️ 同步失敗：'+esc(syncErr),loaderror:'⚠️ 讀取失敗：'+esc(syncErr)}[sync]||'';
+    const bad=sync==='error'||sync==='loaderror';
+    return `<div class="privacy ${bad?'warn':''}">📗 <span><b>資料存在你自己的 Google Sheet</b>（你的雲端硬碟），網站作者看不到。</span><span class="sp"></span><span>${st}</span>
+      ${sync==='error'?'<button class="btn sm" data-a="retry">重試</button>':''}${sync==='loaderror'?'<button class="btn sm" data-a="reload">重新讀取</button>':''}
+      ${sheetLink?`<a class="btn sm" href="${esc(sheetLink)}" target="_blank" rel="noopener">開啟我的 Sheet</a>`:''}<button class="btn sm" data-a="data">資料設定</button></div>`;
+  }
+  const has=S.certs.length||S.records.length;
+  const stale=has&&(!S.lastBackup||days(pd(S.lastBackup),today())>30);
+  if(!storageOK)return `<div class="privacy warn">⚠️ <span>這個瀏覽器（可能是無痕模式）<b>無法保存資料</b>，關掉頁面就會消失。建議連結 Google Sheet，或離開前下載備份。</span><span class="sp"></span><button class="btn sm" data-a="connect">連結 Google Sheet</button><button class="btn sm" data-a="data">備份</button></div>`;
+  return `<div class="privacy ${stale?'warn':''}">🔒 <span><b>資料只存在這台裝置的瀏覽器</b>，不會上傳。想跨裝置使用，可以連結你自己的 Google Sheet。</span><span class="sp"></span>${stale?`<span>${S.lastBackup?'上次備份 '+esc(S.lastBackup):'還沒有備份過'}</span>`:''}<button class="btn sm" data-a="connect">連結 Google Sheet</button><button class="btn sm" data-a="data">${stale?'立即備份':'資料設定'}</button></div>`;
+}
+function renderBar(){const el=$('#bar');if(el)el.innerHTML=privacyBar()}
+function render(){
+  const certs=S.certs;
+  const head=`<header><h1>證照管理系統</h1><div class="row"><button class="btn" data-a="settings">分類設定</button>${certs.length||S.records.length?'<button class="btn" data-a="newcert">＋ 新增證照</button><button class="btn pri" data-a="newrec">＋ 新增進修時數</button>':''}</div></header><div id="bar">${privacyBar()}</div>`;
+  if(mode==='sheet'&&(sync==='loading'||sync==='loaderror')){
+    $('#root').innerHTML=`<div class="wrap">${head}<div class="empty">${sync==='loading'?'正在讀取你的 Google Sheet…':'讀不到你的 Google Sheet。<br><br><button class="btn" data-a="reload">重新讀取</button> <button class="btn" data-a="data">更換或中斷連結</button>'}</div></div>`;return;
+  }
+  if(!certs.length&&!S.records.length){
+    $('#root').innerHTML=`<div class="wrap">${head}
+     <div class="welcome"><h2>👋 開始管理你的證照</h2><div class="meta">追蹤每張證照的效期，以及換證需要的繼續教育時數。</div>
+     <ul><li>設定每張證照需要多少繼續教育時數、分類時數門檻</li><li>記錄每次上課的日期、時數、類別，一堂課可同時採計多張證照</li><li>自動提醒即將到期、時數不足，算出每月需要的進度</li><li>不需註冊；資料存在你自己的 Google Sheet 或這台裝置，網站作者看不到</li></ul>
+     <div class="row"><button class="btn pri" data-a="newcert">＋ 新增第一張證照</button>${mode==='local'?'<button class="btn" data-a="connect">連結我的 Google Sheet</button><button class="btn" data-a="data">從備份檔還原</button>':''}</div></div></div>`;
+    return;
+  }
+  const inf=certs.map(c=>[c,info(c)]);
+  const tot=S.records.reduce((a,r)=>a+num(r.hours),0);
+  const yr=today().getFullYear();
+  const yrH=S.records.filter(r=>(r.date||'').startsWith(String(yr))).reduce((a,r)=>a+num(r.hours),0);
+  const soon=inf.filter(([c,i])=>i.left!==null&&i.left<=180).sort((a,b)=>a[1].left-b[1].left);
+  const short=inf.filter(([c,i])=>i.met===false).length;
+  $('#root').innerHTML=`<div class="wrap">${head}
+  <div class="stats">
+    <div class="stat"><div class="k">證照數</div><div class="v">${certs.length}</div></div>
+    <div class="stat"><div class="k">${yr} 年進修時數</div><div class="v">${r1(yrH)} <small>小時</small></div></div>
+    <div class="stat"><div class="k">累計進修時數</div><div class="v">${r1(tot)} <small>小時・${S.records.length} 筆</small></div></div>
+    <div class="stat"><div class="k">半年內到期／時數未達標</div><div class="v">${soon.length} <small>張</small> / ${short} <small>張</small></div></div>
+  </div>
+  <div class="tabs"><button class="tab ${tab==='overview'?'on':''}" data-tab="overview">證照總覽</button><button class="tab ${tab==='records'?'on':''}" data-tab="records">進修紀錄</button></div>
+  ${tab==='overview'?overview(inf,soon):records()}
+  </div>`;
+}
+function overview(inf,soon){
+  if(!inf.length)return `<div class="empty">還沒有證照，按「＋ 新增證照」開始。</div>`;
+  const up=soon.length?`<div class="upcoming"><h4>⏰ 半年內到期</h4>${soon.map(([c,i])=>`<div class="up"><span>${esc(c.name)}</span><span class="meta">${esc(c.expiryDate)}・${i.left<0?'已過期 '+(-i.left)+' 天':'剩 '+i.left+' 天'}${i.req?'・尚缺 '+r1(i.remain)+' 小時':''}</span></div>`).join('')}</div>`:'';
+  const used=S.certCats.filter(g=>inf.some(([c])=>c.catId===g.id));
+  const hasNone=inf.some(([c])=>!gcat(c.catId));
+  const chips=(used.length>0)?`<div class="chips"><button class="fchip ${!fGroup?'on':''}" data-g="">全部 ${inf.length}</button>${used.map(g=>`<button class="fchip ${fGroup===g.id?'on':''}" data-g="${g.id}"><span class="dot" style="background:${esc(g.color)}"></span>${esc(g.name)} ${inf.filter(([c])=>c.catId===g.id).length}</button>`).join('')}${hasNone?`<button class="fchip ${fGroup==='_none'?'on':''}" data-g="_none">未分類 ${inf.filter(([c])=>!gcat(c.catId)).length}</button>`:''}</div>`:'';
+  const sortL=a=>a.slice().sort((x,y)=>(x[1].left??1e9)-(y[1].left??1e9));
+  const groups=[...S.certCats.map(g=>({g,items:inf.filter(([c])=>c.catId===g.id)})),{g:null,items:inf.filter(([c])=>!gcat(c.catId))}]
+    .filter(x=>x.items.length).filter(x=>!fGroup||(fGroup==='_none'?!x.g:x.g&&x.g.id===fGroup));
+  const single=groups.length===1&&!used.length;
+  return up+chips+groups.map(x=>`<div class="group">${single?'':`<h2>${x.g?`<span class="dot" style="background:${esc(x.g.color)}"></span>${esc(x.g.name)}`:'未分類'} <span class="meta">${x.items.length} 張</span></h2>`}<div class="grid">${sortL(x.items).map(([c,i])=>card(c,i)).join('')}</div></div>`).join('');
+}
+function card(c,i){
+  const g=gcat(c.catId);
+  const pct=i.req?Math.min(100,i.done/i.req*100):0;
+  const exp=c.expiryDate?`${esc(c.expiryDate)}（${i.left<0?'已過期 '+(-i.left)+' 天':'剩 '+i.left+' 天'}）`:'—';
+  return `<div class="card" style="--cc:${g?esc(g.color):'#d0d5dd'}">
+   <div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:nowrap"><div><h3>${esc(c.name)}</h3><div class="meta">${esc(c.issuer||'')}${c.number?'・字號 '+esc(c.number):''}</div></div><span class="pill ${i.cls}">${i.st}</span></div>
+   <dl class="kv"><dt>發證／本期起</dt><dd>${esc(c.issueDate)||'—'}</dd><dt>到期日</dt><dd>${exp}</dd>${c.validYears?`<dt>效期</dt><dd>${c.validYears} 年</dd>`:''}</dl>
+   ${i.req?`<div><div class="hrs"><span><b>${r1(i.done)}</b> / ${r1(i.req)} 小時</span><span class="meta">${i.remain>0?'尚缺 '+r1(i.remain)+' 小時':'✓ 總時數已達標'}</span></div>
+     <div class="bar ${i.done>=i.req?'done':''}" style="margin-top:6px"><i style="width:${pct}%"></i></div>
+     ${i.pace?`<div class="meta" style="margin-top:6px">需每月約 ${r1(i.pace)} 小時才能在到期前完成</div>`:''}</div>`
+     :`<div class="meta">尚未設定繼續教育時數要求（已記錄 ${r1(i.done)} 小時）</div>`}
+   ${i.cats.length?`<div class="cats">${i.cats.map(k=>`<div class="cat"><div class="lab"><span>${esc(k.name)}</span><span class="meta">${r1(k.done)}/${r1(k.req)}</span></div><div class="bar sm ${k.done>=k.req?'done':''}"><i style="width:${k.req?Math.min(100,k.done/k.req*100):0}%"></i></div></div>`).join('')}</div>`:''}
+   ${c.note?`<div class="meta">📝 ${esc(c.note)}</div>`:''}
+   <div class="acts"><button class="btn sm pri" data-a="newrec" data-id="${c.id}">＋ 時數</button><button class="btn sm" data-a="viewrecs" data-id="${c.id}">紀錄 ${i.rs.length}</button><button class="btn sm" data-a="editcert" data-id="${c.id}">編輯</button>${c.expiryDate?`<button class="btn sm" data-a="renew" data-id="${c.id}">換證</button>`:''}</div>
+  </div>`;
+}
+function records(){
+  const years=[...new Set(S.records.map(r=>(r.date||'').slice(0,4)).filter(Boolean))].sort().reverse();
+  let rs=S.records.slice();
+  if(fCert)rs=rs.filter(r=>r.certIds.includes(fCert));
+  if(fYear)rs=rs.filter(r=>(r.date||'').startsWith(fYear));
+  if(fCe)rs=rs.filter(r=>fCe==='_none'?!kcat(r.ceCatId):r.ceCatId===fCe);
+  rs.sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  const sum=rs.reduce((a,r)=>a+num(r.hours),0);
+  const byCat=S.ceCats.map(k=>[k.name,rs.filter(r=>r.ceCatId===k.id).reduce((a,r)=>a+num(r.hours),0)]).filter(x=>x[1]>0);
+  return `<div class="filters"><select data-f="cert"><option value="">全部證照</option>${S.certs.map(c=>`<option value="${c.id}" ${fCert===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select>
+   <select data-f="ce"><option value="">全部課程類別</option>${S.ceCats.map(k=>`<option value="${k.id}" ${fCe===k.id?'selected':''}>${esc(k.name)}</option>`).join('')}<option value="_none" ${fCe==='_none'?'selected':''}>未分類</option></select>
+   <select data-f="year"><option value="">全部年份</option>${years.map(y=>`<option ${fYear===y?'selected':''}>${y}</option>`).join('')}</select>
+   <span class="meta">${rs.length} 筆・${r1(sum)} 小時${byCat.length?'（'+byCat.map(x=>esc(x[0])+' '+r1(x[1])).join('、')+'）':''}</span></div>
+   ${rs.length?`<div class="tablewrap"><table><thead><tr><th>日期</th><th>課程／活動</th><th>主辦單位</th><th>課程類別</th><th class="num">時數</th><th>採計證照</th><th></th></tr></thead><tbody>
+   ${rs.map(r=>`<tr><td style="white-space:nowrap">${esc(r.date)}</td><td>${esc(r.title)}${r.note?`<div class="meta">${esc(r.note)}</div>`:''}</td><td>${esc(r.org)}</td><td>${esc((kcat(r.ceCatId)||{}).name||'')}</td><td class="num">${r1(num(r.hours))}</td><td>${r.certIds.map(id=>{const c=S.certs.find(x=>x.id===id);const g=c&&gcat(c.catId);return `<span class="chip">${g?`<span class="dot" style="background:${esc(g.color)}"></span>`:''}${esc(certName(id))}</span>`}).join('')}</td><td style="white-space:nowrap"><button class="btn sm ghost" data-a="editrec" data-id="${r.id}">編輯</button></td></tr>`).join('')}
+   </tbody><tfoot><tr><td colspan="4">合計</td><td class="num">${r1(sum)}</td><td colspan="2"></td></tr></tfoot></table></div>`
+   :`<div class="empty">沒有符合的進修紀錄。</div>`}`;
+}
+
+/* ---------- 對話框 ---------- */
+function modal(html,onMount){
+  closeModal();const bg=document.createElement('div');bg.className='modal-bg';bg.innerHTML=`<div class="modal">${html}</div>`;
+  bg.addEventListener('mousedown',e=>{if(e.target===bg)closeModal()});document.body.appendChild(bg);onMount&&onMount(bg);
+  const f=bg.querySelector('input:not([type=color]):not([type=file]),select,textarea');f&&f.focus();
+}
+function closeModal(){const m=$('.modal-bg');m&&m.remove()}
+function ask(msg,okTxt,fn,back){modal(`<h2>確認</h2><p>${msg}</p><div class="mfoot"><button class="btn" data-x>取消</button><button class="btn dangerfill" data-ok>${okTxt}</button></div>`,m=>{m.querySelector('[data-x]').onclick=()=>{closeModal();back&&back()};m.querySelector('[data-ok]').onclick=()=>{closeModal();fn()}})}
+const opts=(list,sel,empty)=>`<option value="">${empty}</option>`+list.map(x=>`<option value="${x.id}" ${sel===x.id?'selected':''}>${esc(x.name)}</option>`).join('');
+
+function certForm(c){
+  const isNew=!c;c=c||{id:uid(),name:'',catId:fGroup&&fGroup!=='_none'?fGroup:'',issuer:'',number:'',issueDate:'',expiryDate:'',validYears:0,requiredHours:0,cats:[],note:''};
+  const catRow=k=>`<div class="catrow"><select data-cn>${opts(S.ceCats,k.ceCatId,'選擇課程類別')}</select><input type="number" min="0" step="0.5" placeholder="至少幾小時" value="${k.hours||''}" data-ch><button type="button" class="btn sm ghost" data-rm title="移除">✕</button></div>`;
+  modal(`<h2>${isNew?'新增證照':'編輯證照'}</h2><form class="f" id="cf">
+   <label class="full">證照名稱 *<input type="text" name="name" required value="${esc(c.name)}"></label>
+   <label>證照分類<select name="catId">${opts(S.certCats,c.catId,'未分類')}</select><span class="hint">分類可在「分類設定」新增修改</span></label>
+   <label>發證單位<input type="text" name="issuer" value="${esc(c.issuer)}"></label>
+   <label>證照字號<input type="text" name="number" value="${esc(c.number)}"></label>
+   <label>發證日／本期起日<input type="date" name="issueDate" value="${esc(c.issueDate)}"></label>
+   <label>效期（年）<input type="number" min="0" step="1" name="validYears" value="${c.validYears||''}"><span class="hint">填了會自動推算到期日</span></label>
+   <label>到期日<input type="date" name="expiryDate" value="${esc(c.expiryDate)}"></label>
+   <label class="full">本期需繼續教育時數<input type="number" min="0" step="0.5" name="requiredHours" value="${c.requiredHours||''}"><span class="hint">只採計「本期起日～到期日」之間的課程</span></label>
+   <div class="full"><div class="meta" style="margin-bottom:6px">分類時數門檻（選填）— 例如「專業課程至少 12 小時」。進修紀錄選了同一個課程類別就會自動計入。</div><div id="cats">${(c.cats||[]).map(catRow).join('')}</div><button type="button" class="btn sm" id="addcat">＋ 新增門檻</button></div>
+   <label class="full">備註<textarea name="note" placeholder="換證規定、上傳方式、承辦窗口…">${esc(c.note)}</textarea></label>
+   <div class="full mfoot" style="justify-content:space-between">${isNew?'<span></span>':'<button type="button" class="btn danger" id="del">刪除證照</button>'}<span class="row"><button type="button" class="btn" data-x>取消</button><button class="btn pri">儲存</button></span></div></form>`,m=>{
+    const F=m.querySelector('#cf'),E=F.elements;
+    m.querySelector('[data-x]').onclick=closeModal;
+    m.querySelector('#addcat').onclick=()=>{m.querySelector('#cats').insertAdjacentHTML('beforeend',catRow({ceCatId:'',hours:''}))};
+    m.querySelector('#cats').addEventListener('click',e=>{if(e.target.matches('[data-rm]'))e.target.parentElement.remove()});
+    let touched=false;E.expiryDate.addEventListener('input',()=>touched=true);
+    const autoExp=()=>{const y=num(E.validYears.value);if(y&&E.issueDate.value&&!touched){const d=pd(addYears(E.issueDate.value,y));d.setDate(d.getDate()-1);E.expiryDate.value=fmt(d)}};
+    E.issueDate.addEventListener('change',autoExp);E.validYears.addEventListener('change',autoExp);
+    const del=m.querySelector('#del');del&&(del.onclick=()=>ask(`確定刪除「${esc(c.name)}」？進修紀錄會保留，但不再採計到這張證照。`,'刪除',()=>{S.certs=S.certs.filter(x=>x.id!==c.id);S.records.forEach(r=>r.certIds=r.certIds.filter(i=>i!==c.id));save('已刪除證照')}));
+    F.onsubmit=e=>{e.preventDefault();
+      const o={...c,name:E.name.value.trim(),catId:E.catId.value,issuer:E.issuer.value.trim(),number:E.number.value.trim(),issueDate:E.issueDate.value,expiryDate:E.expiryDate.value,validYears:num(E.validYears.value),requiredHours:num(E.requiredHours.value),note:E.note.value.trim(),
+        cats:[...m.querySelectorAll('.catrow')].map(r=>({ceCatId:r.querySelector('[data-cn]').value,hours:num(r.querySelector('[data-ch]').value)})).filter(k=>k.ceCatId)};
+      if(!o.name)return;
+      if(isNew)S.certs.push(o);else S.certs[S.certs.findIndex(x=>x.id===c.id)]=o;
+      closeModal();save(isNew?'已新增證照':'已更新證照');};
+  });
+}
+function recForm(r,preCert){
+  const isNew=!r;r=r||{id:uid(),date:fmt(today()),title:'',org:'',hours:'',ceCatId:'',certIds:preCert?[preCert]:[],note:''};
+  const grouped=[...S.certCats.map(g=>({g,cs:S.certs.filter(c=>c.catId===g.id)})),{g:null,cs:S.certs.filter(c=>!gcat(c.catId))}].filter(x=>x.cs.length);
+  modal(`<h2>${isNew?'新增進修時數':'編輯進修紀錄'}</h2><form class="f" id="rf">
+   <label class="full">課程／活動名稱 *<input type="text" name="title" required value="${esc(r.title)}"></label>
+   <label>日期 *<input type="date" name="date" required value="${esc(r.date)}"></label>
+   <label>時數 *<input type="number" name="hours" min="0" step="0.5" required value="${r.hours}"></label>
+   <label>主辦單位<input type="text" name="org" value="${esc(r.org)}"></label>
+   <label>課程類別<select name="ceCatId">${opts(S.ceCats,r.ceCatId,'未分類')}</select><span class="hint">對應證照的分類時數門檻</span></label>
+   <div class="full"><div class="meta" style="margin-bottom:6px">採計到哪些證照（一堂課可同時採計多張）</div>
+     ${grouped.length?grouped.map(x=>`<div style="margin-bottom:6px">${grouped.length>1?`<div class="tag" style="margin-bottom:3px">${x.g?`<span class="dot" style="background:${esc(x.g.color)}"></span>${esc(x.g.name)}`:'未分類'}</div>`:''}<div class="checks">${x.cs.map(c=>`<label><input type="checkbox" value="${c.id}" ${r.certIds.includes(c.id)?'checked':''}>${esc(c.name)}</label>`).join('')}</div></div>`).join(''):'<span class="meta">尚無證照</span>'}</div>
+   <label class="full">備註<textarea name="note" placeholder="證明編號、上傳狀態…">${esc(r.note)}</textarea></label>
+   <div class="full mfoot" style="justify-content:space-between">${isNew?'<span></span>':'<button type="button" class="btn danger" id="del">刪除紀錄</button>'}<span class="row"><button type="button" class="btn" data-x>取消</button><button class="btn pri">儲存</button></span></div></form>`,m=>{
+    const F=m.querySelector('#rf'),E=F.elements;m.querySelector('[data-x]').onclick=closeModal;
+    const del=m.querySelector('#del');del&&(del.onclick=()=>ask(`確定刪除「${esc(r.title)}」這筆紀錄？`,'刪除',()=>{S.records=S.records.filter(x=>x.id!==r.id);save('已刪除紀錄')}));
+    F.onsubmit=e=>{e.preventDefault();
+      const o={...r,title:E.title.value.trim(),date:E.date.value,hours:num(E.hours.value),org:E.org.value.trim(),ceCatId:E.ceCatId.value,note:E.note.value.trim(),certIds:[...m.querySelectorAll('.checks input:checked')].map(x=>x.value)};
+      if(isNew)S.records.push(o);else S.records[S.records.findIndex(x=>x.id===r.id)]=o;
+      closeModal();save(isNew?'已新增進修時數':'已更新紀錄');};
+  });
+}
+function renewForm(c){
+  const y=c.validYears||0;
+  const ne=y?addYears(c.expiryDate,y):'';
+  const ns=(()=>{const d=pd(c.expiryDate);d.setDate(d.getDate()+1);return fmt(d)})();
+  modal(`<h2>換證：${esc(c.name)}</h2><p class="meta">換證後本期改為新的起訖日；舊紀錄不會刪除，只是不再算入新一期。</p><form class="f" id="nf">
+   <label>新一期起日<input type="date" name="s" value="${ns}"></label><label>新到期日<input type="date" name="e" value="${ne}" required></label>
+   <label class="full">新證照字號（選填）<input type="text" name="n" value="${esc(c.number)}"></label>
+   <div class="full mfoot"><button type="button" class="btn" data-x>取消</button><button class="btn pri">確認換證</button></div></form>`,m=>{
+    const F=m.querySelector('#nf'),E=F.elements;m.querySelector('[data-x]').onclick=closeModal;
+    F.onsubmit=e=>{e.preventDefault();c.issueDate=E.s.value;c.expiryDate=E.e.value;c.number=E.n.value.trim();closeModal();save('已換證，開始新的一期')};
+  });
+}
+function settingsForm(){
+  // 編輯用暫存副本
+  const gc=S.certCats.map(x=>({...x})), kc=S.ceCats.map(x=>({...x}));
+  const usedG=id=>S.certs.filter(c=>c.catId===id).length;
+  const usedK=id=>S.records.filter(r=>r.ceCatId===id).length+S.certs.filter(c=>(c.cats||[]).some(k=>k.ceCatId===id)).length;
+  const gRow=g=>`<div class="setrow" data-id="${g.id}"><input type="color" value="${esc(g.color)}" data-col><input type="text" value="${esc(g.name)}" data-nm placeholder="分類名稱"><span class="hint">${usedG(g.id)?usedG(g.id)+' 張證照':''}</span><button type="button" class="btn sm ghost" data-rm>✕</button></div>`;
+  const kRow=k=>`<div class="setrow nocolor" data-id="${k.id}"><input type="text" value="${esc(k.name)}" data-nm placeholder="課程類別名稱"><span class="hint">${usedK(k.id)?'使用中 '+usedK(k.id):''}</span><button type="button" class="btn sm ghost" data-rm>✕</button></div>`;
+  modal(`<h2>分類設定</h2>
+   <h3>證照分類</h3><div class="hint" style="margin-bottom:8px">把證照分組，例如「運動指導」「急救救生」；總覽頁會依分類分組並可篩選。</div>
+   <div id="gl">${gc.map(gRow).join('')}</div><button type="button" class="btn sm" id="ag">＋ 新增證照分類</button>
+   <h3>課程類別</h3><div class="hint" style="margin-bottom:8px">進修紀錄的類別，例如「專業課程」「一般課程」。證照可設定「某類別至少幾小時」，紀錄選同一類別就會自動計入。</div>
+   <div id="kl">${kc.map(kRow).join('')}</div><button type="button" class="btn sm" id="ak">＋ 新增課程類別</button>
+   <div class="mfoot"><button type="button" class="btn" data-x>取消</button><button class="btn pri" id="ok">儲存</button></div>`,m=>{
+    m.querySelector('[data-x]').onclick=closeModal;
+    m.querySelector('#ag').onclick=()=>{m.querySelector('#gl').insertAdjacentHTML('beforeend',gRow({id:'g'+uid(),name:'',color:COLORS[m.querySelectorAll('#gl .setrow').length%COLORS.length]}));m.querySelector('#gl .setrow:last-child [data-nm]').focus()};
+    m.querySelector('#ak').onclick=()=>{m.querySelector('#kl').insertAdjacentHTML('beforeend',kRow({id:'k'+uid(),name:''}));m.querySelector('#kl .setrow:last-child [data-nm]').focus()};
+    m.addEventListener('click',e=>{if(e.target.matches('[data-rm]'))e.target.closest('.setrow').remove()});
+    m.querySelector('#ok').onclick=()=>{
+      const ng=[...m.querySelectorAll('#gl .setrow')].map(r=>({id:r.dataset.id,name:r.querySelector('[data-nm]').value.trim(),color:r.querySelector('[data-col]').value})).filter(x=>x.name);
+      const nk=[...m.querySelectorAll('#kl .setrow')].map(r=>({id:r.dataset.id,name:r.querySelector('[data-nm]').value.trim()})).filter(x=>x.name);
+      const goneG=S.certCats.filter(g=>!ng.some(x=>x.id===g.id)&&usedG(g.id));
+      const goneK=S.ceCats.filter(k=>!nk.some(x=>x.id===k.id)&&usedK(k.id));
+      const apply=()=>{
+        S.certCats=ng;S.ceCats=nk;
+        S.certs.forEach(c=>{if(!gcat(c.catId))c.catId='';c.cats=(c.cats||[]).filter(k=>kcat(k.ceCatId))});
+        S.records.forEach(r=>{if(!kcat(r.ceCatId))r.ceCatId=''});
+        if(fGroup&&fGroup!=='_none'&&!gcat(fGroup))fGroup='';if(fCe&&fCe!=='_none'&&!kcat(fCe))fCe='';
+        closeModal();save('已更新分類');
+      };
+      if(goneG.length||goneK.length)ask(`要刪除的分類還在使用中：${[...goneG,...goneK].map(x=>'「'+esc(x.name)+'」').join('、')}。刪除後相關證照／紀錄會變成「未分類」，對應的分類時數門檻也會移除。`,'確定刪除',apply);
+      else apply();
+    };
+  });
+}
+function backupJSON(){return JSON.stringify({app:'certmgr',version:2,exported:new Date().toISOString(),...payload()},null,2)}
+function downloadText(name,text,type){
+  try{const url=URL.createObjectURL(new Blob([text],{type:type||'application/json'}));const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);return true}catch(e){return false}
+}
+function toCSV(){
+  return '﻿'+['日期,課程,主辦單位,課程類別,時數,採計證照,備註',...S.records.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(r=>[r.date,r.title,r.org,(kcat(r.ceCatId)||{}).name||'',r.hours,r.certIds.map(certName).join('、'),r.note].map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(','))].join('\n');
+}
+function dataForm(){
+  const isSheet=mode==='sheet';
+  modal(`<h2>資料設定</h2>
+   <div class="box"><b>${isSheet?'📗 資料存在你的 Google Sheet':'🔒 資料只存在這台裝置'}</b><div class="meta" style="margin-top:4px">${isSheet
+     ?'所有證照與紀錄都寫在你自己雲端硬碟裡的 Sheet，換裝置只要貼上同一個網址即可。<b>請不要把部署網址分享給別人</b>，拿到網址的人就能讀寫你的資料。'
+     :'只存在這個瀏覽器，不會上傳。換裝置、清除瀏覽器資料或用無痕模式時資料不會跟著走，建議連結 Google Sheet 或定期下載備份。'}</div>
+     <div class="row" style="margin-top:8px">${isSheet?`${sheetLink?`<a class="btn" href="${esc(sheetLink)}" target="_blank" rel="noopener">開啟我的 Sheet</a>`:''}<button class="btn" id="resync">重新從 Sheet 讀取</button><button class="btn danger" id="unlink">中斷連結</button>`:'<button class="btn pri" id="link">連結 Google Sheet</button>'}</div></div>
+   <div class="box"><b>備份與匯出</b>${!isSheet&&S.lastBackup?`<span class="meta">（上次 ${esc(S.lastBackup)}）</span>`:''}<div class="row" style="margin-top:8px"><button class="btn" id="dl">下載備份檔 .json</button><button class="btn" id="csv">下載紀錄 CSV</button><button class="btn" id="cj">複製備份文字</button></div><div class="hint" style="margin-top:6px">CSV 可用 Excel／Google 試算表開啟，方便繳交時數證明。</div></div>
+   <div class="box"><b>從備份還原</b><div class="hint" style="margin:4px 0 8px">選擇備份檔，或貼上備份文字（會取代目前所有資料${isSheet?'，包含 Sheet 內容':''}）</div>
+   <input type="file" accept=".json,application/json,text/plain" id="file" style="margin-bottom:8px"><textarea id="ij" placeholder="貼上備份文字…"></textarea>
+   <div class="row" style="margin-top:8px"><button class="btn" id="imp">還原</button></div></div>
+   ${isSheet?'':'<div class="box"><b>清除資料</b><div class="hint" style="margin:4px 0 8px">把這個瀏覽器裡的證照與紀錄全部刪除（例如在共用電腦用完後）。</div><button class="btn danger" id="wipe">清除此裝置上的所有資料</button></div>'}
+   <div class="mfoot"><button class="btn" data-x>關閉</button></div>`,m=>{
+    const q=x=>m.querySelector(x);
+    q('[data-x]').onclick=closeModal;
+    const mark=()=>{if(mode!=='local')return;S.lastBackup=fmt(today());lsSet(LS,JSON.stringify(S));renderBar()};
+    q('#dl').onclick=()=>{if(downloadText(`證照備份_${fmt(today())}.json`,backupJSON())){mark();toast('已下載備份檔')}else toast('無法下載，請改用「複製備份文字」')};
+    q('#csv').onclick=()=>{downloadText(`進修紀錄_${fmt(today())}.csv`,toCSV(),'text/csv;charset=utf-8')?toast('已下載 CSV'):toast('無法下載')};
+    q('#cj').onclick=async()=>{const t=backupJSON();try{await navigator.clipboard.writeText(t);mark();toast('已複製備份文字')}catch(e){q('#ij').value=t;q('#ij').select();toast('無法直接複製，已放在下方文字框')}};
+    q('#file').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>q('#ij').value=rd.result;rd.readAsText(f)};
+    q('#imp').onclick=()=>{let o;try{o=JSON.parse(q('#ij').value);if(!Array.isArray(o.certs)||!Array.isArray(o.records))throw 0}catch(e){toast('格式不正確，請選擇本系統匯出的備份');return}
+      ask(`備份內有 ${o.certs.length} 張證照、${o.records.length} 筆紀錄，還原會取代目前所有資料，確定？`,'還原',()=>{const u=S.updatedAt;S=normalize(o);S.updatedAt=u;if(mode==='local')S.lastBackup=fmt(today());save('已還原備份')},dataForm)};
+    q('#link')&&(q('#link').onclick=connectForm);
+    q('#resync')&&(q('#resync').onclick=()=>{closeModal();loadSheet()});
+    q('#unlink')&&(q('#unlink').onclick=()=>ask('中斷連結後，這台裝置不再讀寫你的 Sheet（Sheet 裡的資料不會被刪除，之後可重新貼上網址連結）。','中斷連結',()=>{lsDel(LS_URL);mode='local';sheetUrl='';sheetLink='';S=localData()||blank();render();toast('已中斷連結')},dataForm));
+    q('#wipe')&&(q('#wipe').onclick=()=>ask('確定清除這台裝置上的所有證照與進修紀錄？此動作無法復原，建議先下載備份。','全部清除',()=>{S=blank();lsDel(LS);tab='overview';fCert=fYear=fCe=fGroup='';render();toast('已清除')},dataForm));
+  });
+}
+function connectForm(){
+  const tpl=CONFIG.templateCopyUrl;
+  modal(`<h2>連結我的 Google Sheet</h2>
+   <div class="meta" style="margin-bottom:12px">資料會存在<b>你自己</b>雲端硬碟的 Sheet，網站作者看不到；換手機、電腦只要貼上同一個網址。第一次設定約 3 分鐘。</div>
+   <div class="box"><b>1. 複製範本 Sheet</b><div class="hint" style="margin:4px 0 8px">會在你的雲端硬碟建立一份自己的副本。</div>
+     ${tpl?`<a class="btn pri" href="${esc(tpl)}" target="_blank" rel="noopener">建立我的副本 ↗</a>`:'<span class="meta">（網站管理者尚未設定範本連結）</span>'}</div>
+   <div class="box"><b>2. 部署成網頁應用程式</b><ol class="hint" style="margin:6px 0 0;padding-left:18px;line-height:1.8">
+     <li>在你的副本中，點上方選單「擴充功能」→「Apps Script」</li>
+     <li>右上角「部署」→「新增部署作業」，左側齒輪選「網頁應用程式」</li>
+     <li>「執行身分」選<b>我</b>，「誰可以存取」選<b>所有人</b>，按「部署」</li>
+     <li>按「授權存取」並選擇你的帳號。若出現「Google 尚未驗證這個應用程式」，點「進階」→「前往（不安全）」→「允許」。這是因為程式碼在你自己的副本裡，只會讀寫這份 Sheet</li>
+     <li>複製「網頁應用程式」網址（以 <code>/exec</code> 結尾）</li></ol></div>
+   <div class="box"><b>3. 貼上網址</b><input type="text" id="u" placeholder="https://script.google.com/macros/s/……/exec" style="margin-top:8px">
+     <div class="hint" style="margin-top:6px">網址只會記在這台裝置。請不要分享給別人，拿到網址的人就能讀寫你的資料。</div>
+     <div id="msg" class="meta" style="margin-top:6px"></div></div>
+   <div class="mfoot"><button class="btn" data-x>取消</button><button class="btn pri" id="go">連結</button></div>`,m=>{
+    const q=x=>m.querySelector(x);q('[data-x]').onclick=closeModal;
+    q('#go').onclick=async()=>{
+      const u=q('#u').value.trim();
+      if(!validUrl(u)){q('#msg').textContent='⚠️ 網址格式不對，應為 https://script.google.com/macros/s/…/exec';return}
+      q('#go').disabled=true;q('#msg').textContent='連線中…';
+      let d;try{d=await sheetGet(u)}catch(e){q('#msg').textContent='⚠️ '+e.message;q('#go').disabled=false;return}
+      const remote=fromSheet(d), local=localData();
+      const rHas=remote.certs.length||remote.records.length, lHas=local&&(local.certs.length||local.records.length);
+      const finish=(useLocal)=>{
+        lsSet(LS_URL,u);mode='sheet';sheetUrl=u;
+        S=remote;if(useLocal){const up=S.updatedAt;S={...local,updatedAt:up}}
+        sync='ok';syncAt=new Date().toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'});closeModal();render();
+        if(useLocal)push();toast('已連結 Google Sheet');
+      };
+      if(lHas&&!rHas)return ask(`這台裝置有 ${local.certs.length} 張證照、${local.records.length} 筆紀錄。要上傳到你的 Sheet 嗎？`,'上傳到 Sheet',()=>finish(true),()=>finish(false));
+      if(lHas&&rHas){modal(`<h2>兩邊都有資料</h2><p>Sheet 裡有 ${remote.certs.length} 張證照、${remote.records.length} 筆紀錄；這台裝置有 ${local.certs.length} 張、${local.records.length} 筆。要用哪一份？（另一份會被覆蓋，裝置上的資料會先保留在瀏覽器中）</p>
+        <div class="mfoot"><button class="btn" id="a">用這台裝置的資料覆蓋 Sheet</button><button class="btn pri" id="b">使用 Sheet 的資料</button></div>`,mm=>{mm.querySelector('#a').onclick=()=>finish(true);mm.querySelector('#b').onclick=()=>finish(false)});return}
+      finish(false);
+    };
+  });
+}
+
+/* ---------- 事件 ---------- */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-tab]');if(t){tab=t.dataset.tab;render();return}
+  const g=e.target.closest('[data-g]');if(g){fGroup=g.dataset.g;render();return}
+  const a=e.target.closest('[data-a]');if(!a)return;const id=a.dataset.id;
+  ({newcert:()=>certForm(),editcert:()=>certForm(S.certs.find(c=>c.id===id)),newrec:()=>recForm(null,id),editrec:()=>recForm(S.records.find(r=>r.id===id)),
+    renew:()=>renewForm(S.certs.find(c=>c.id===id)),connect:connectForm,retry:()=>push(),reload:()=>{closeModal();loadSheet()},viewrecs:()=>{fCert=id;fYear='';fCe='';tab='records';render()},data:dataForm,settings:settingsForm})[a.dataset.a]?.();
+});
+document.addEventListener('change',e=>{const f=e.target.dataset.f;if(!f)return;if(f==='cert')fCert=e.target.value;if(f==='year')fYear=e.target.value;if(f==='ce')fCe=e.target.value;render()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+
+load();render();if(mode==='sheet')loadSheet();
+})();
+</script>
+</body>
+</html>

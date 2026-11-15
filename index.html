@@ -131,11 +131,11 @@ function localData(){try{const raw=localStorage.getItem(LS);return raw?normalize
 function normalize(o){
   const s={certs:Array.isArray(o.certs)?o.certs:[],records:Array.isArray(o.records)?o.records:[],
     certCats:Array.isArray(o.certCats)?o.certCats:defCertCats(),ceCats:Array.isArray(o.ceCats)?o.ceCats:defCeCats(),lastBackup:o.lastBackup||'',updatedAt:o.updatedAt||''};
-  s.certs.forEach(c=>{c.cats=Array.isArray(c.cats)?c.cats:[];c.catId=c.catId||'';c.certIds=undefined});
+  s.certs.forEach(c=>{c.cats=Array.isArray(c.cats)?c.cats:[];c.catId=c.catId||'';c.certIds=undefined;if(c.expiryDate==='永久'||c.permanent===true||c.permanent==='true'){c.permanent=true;c.expiryDate=''}else c.permanent=false});
   s.records.forEach(r=>{r.certIds=Array.isArray(r.certIds)?r.certIds:[];r.ceCatId=r.ceCatId||''});
   return s;
 }
-const payload=()=>({certs:S.certs,records:S.records,certCats:S.certCats,ceCats:S.ceCats});
+const payload=()=>({certs:S.certs.map(c=>c.permanent?{...c,expiryDate:'永久',validYears:0}:c),records:S.records,certCats:S.certCats,ceCats:S.ceCats});
 
 /* ---------- Google Sheet ---------- */
 const validUrl=u=>/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(u.trim())||/^https:\/\/script\.google\.com\/a\/macros\/[^/]+\/s\/[\w-]+\/exec$/.test(u.trim());
@@ -214,7 +214,8 @@ function info(c){
   const catsMet=cats.every(k=>k.done>=k.req);
   const met=req>0?done>=req&&catsMet:null;
   let st,cls;
-  if(left===null){st='未設定效期';cls='p-none'}
+  if(c.permanent){st=met===false?'永久有效・時數未達標':'永久有效';cls=met===false?'p-warn':'p-ok'}
+  else if(left===null){st='未設定效期';cls='p-none'}
   else if(left<0){st='已過期';cls='p-bad'}
   else if(met===false&&left<=180){st='時數不足・即將到期';cls='p-bad'}
   else if(left<=90){st=met?'已達標・待換證':'即將到期';cls='p-warn'}
@@ -288,7 +289,7 @@ function overview(inf,soon){
 function card(c,i){
   const g=gcat(c.catId);
   const pct=i.req?Math.min(100,i.done/i.req*100):0;
-  const exp=c.expiryDate?`${esc(c.expiryDate)}（${i.left<0?'已過期 '+(-i.left)+' 天':'剩 '+i.left+' 天'}）`:'—';
+  const exp=c.permanent?'♾️ 永久有效':c.expiryDate?`${esc(c.expiryDate)}（${i.left<0?'已過期 '+(-i.left)+' 天':'剩 '+i.left+' 天'}）`:'—';
   return `<div class="card" style="--cc:${g?esc(g.color):'#d0d5dd'}">
    <div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:nowrap"><div><h3>${esc(c.name)}</h3><div class="meta">${esc(c.issuer||'')}${c.number?'・字號 '+esc(c.number):''}</div></div><span class="pill ${i.cls}">${i.st}</span></div>
    <dl class="kv"><dt>發證／本期起</dt><dd>${esc(c.issueDate)||'—'}</dd><dt>到期日</dt><dd>${exp}</dd>${c.validYears?`<dt>效期</dt><dd>${c.validYears} 年</dd>`:''}</dl>
@@ -298,7 +299,7 @@ function card(c,i){
      :`<div class="meta">尚未設定繼續教育時數要求（已記錄 ${r1(i.done)} 小時）</div>`}
    ${i.cats.length?`<div class="cats">${i.cats.map(k=>`<div class="cat"><div class="lab"><span>${esc(k.name)}</span><span class="meta">${r1(k.done)}/${r1(k.req)}</span></div><div class="bar sm ${k.done>=k.req?'done':''}"><i style="width:${k.req?Math.min(100,k.done/k.req*100):0}%"></i></div></div>`).join('')}</div>`:''}
    ${c.note?`<div class="meta">📝 ${esc(c.note)}</div>`:''}
-   <div class="acts"><button class="btn sm pri" data-a="newrec" data-id="${c.id}">＋ 時數</button><button class="btn sm" data-a="viewrecs" data-id="${c.id}">紀錄 ${i.rs.length}</button><button class="btn sm" data-a="editcert" data-id="${c.id}">編輯</button>${c.expiryDate?`<button class="btn sm" data-a="renew" data-id="${c.id}">換證</button>`:''}</div>
+   <div class="acts"><button class="btn sm pri" data-a="newrec" data-id="${c.id}">＋ 時數</button><button class="btn sm" data-a="viewrecs" data-id="${c.id}">紀錄 ${i.rs.length}</button><button class="btn sm" data-a="editcert" data-id="${c.id}">編輯</button>${c.expiryDate&&!c.permanent?`<button class="btn sm" data-a="renew" data-id="${c.id}">換證</button>`:''}</div>
   </div>`;
 }
 function records(){
@@ -339,9 +340,10 @@ function certForm(c){
    <label>發證單位<input type="text" name="issuer" value="${esc(c.issuer)}"></label>
    <label>證照字號<input type="text" name="number" value="${esc(c.number)}"></label>
    <label>發證日／本期起日<input type="date" name="issueDate" value="${esc(c.issueDate)}"></label>
-   <label>效期（年）<input type="number" min="0" step="1" name="validYears" value="${c.validYears||''}"><span class="hint">填了會自動推算到期日</span></label>
-   <label>到期日<input type="date" name="expiryDate" value="${esc(c.expiryDate)}"></label>
-   <label class="full">本期需繼續教育時數<input type="number" min="0" step="0.5" name="requiredHours" value="${c.requiredHours||''}"><span class="hint">只採計「本期起日～到期日」之間的課程</span></label>
+   <label class="full" style="flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-size:13.5px"><input type="checkbox" name="permanent" ${c.permanent?'checked':''}>永久有效（沒有到期日）</label>
+   <label class="exp">效期（年）<input type="number" min="0" step="1" name="validYears" value="${c.validYears||''}"><span class="hint">填了會自動推算到期日</span></label>
+   <label class="exp">到期日<input type="date" name="expiryDate" value="${esc(c.expiryDate)}"></label>
+   <label class="full">本期需繼續教育時數<input type="number" min="0" step="0.5" name="requiredHours" value="${c.requiredHours||''}"><span class="hint" id="rqhint">只採計「本期起日～到期日」之間的課程</span></label>
    <div class="full"><div class="meta" style="margin-bottom:6px">分類時數門檻（選填）— 例如「專業課程至少 12 小時」。進修紀錄選了同一個課程類別就會自動計入。</div><div id="cats">${(c.cats||[]).map(catRow).join('')}</div><button type="button" class="btn sm" id="addcat">＋ 新增門檻</button></div>
    <label class="full">備註<textarea name="note" placeholder="換證規定、上傳方式、承辦窗口…">${esc(c.note)}</textarea></label>
    <div class="full mfoot" style="justify-content:space-between">${isNew?'<span></span>':'<button type="button" class="btn danger" id="del">刪除證照</button>'}<span class="row"><button type="button" class="btn" data-x>取消</button><button class="btn pri">儲存</button></span></div></form>`,m=>{
@@ -350,11 +352,13 @@ function certForm(c){
     m.querySelector('#addcat').onclick=()=>{m.querySelector('#cats').insertAdjacentHTML('beforeend',catRow({ceCatId:'',hours:''}))};
     m.querySelector('#cats').addEventListener('click',e=>{if(e.target.matches('[data-rm]'))e.target.parentElement.remove()});
     let touched=false;E.expiryDate.addEventListener('input',()=>touched=true);
+    const syncPerm=()=>{const p=E.permanent.checked;m.querySelectorAll('.exp').forEach(l=>l.style.display=p?'none':'');m.querySelector('#rqhint').textContent=p?'永久證照通常不需要；若有要求，會採計發證日之後的所有課程':'只採計「本期起日～到期日」之間的課程'};
+    E.permanent.addEventListener('change',syncPerm);syncPerm();
     const autoExp=()=>{const y=num(E.validYears.value);if(y&&E.issueDate.value&&!touched){const d=pd(addYears(E.issueDate.value,y));d.setDate(d.getDate()-1);E.expiryDate.value=fmt(d)}};
     E.issueDate.addEventListener('change',autoExp);E.validYears.addEventListener('change',autoExp);
     const del=m.querySelector('#del');del&&(del.onclick=()=>ask(`確定刪除「${esc(c.name)}」？進修紀錄會保留，但不再採計到這張證照。`,'刪除',()=>{S.certs=S.certs.filter(x=>x.id!==c.id);S.records.forEach(r=>r.certIds=r.certIds.filter(i=>i!==c.id));save('已刪除證照')}));
     F.onsubmit=e=>{e.preventDefault();
-      const o={...c,name:E.name.value.trim(),catId:E.catId.value,issuer:E.issuer.value.trim(),number:E.number.value.trim(),issueDate:E.issueDate.value,expiryDate:E.expiryDate.value,validYears:num(E.validYears.value),requiredHours:num(E.requiredHours.value),note:E.note.value.trim(),
+      const o={...c,name:E.name.value.trim(),catId:E.catId.value,issuer:E.issuer.value.trim(),number:E.number.value.trim(),issueDate:E.issueDate.value,permanent:E.permanent.checked,expiryDate:E.permanent.checked?'':E.expiryDate.value,validYears:E.permanent.checked?0:num(E.validYears.value),requiredHours:num(E.requiredHours.value),note:E.note.value.trim(),
         cats:[...m.querySelectorAll('.catrow')].map(r=>({ceCatId:r.querySelector('[data-cn]').value,hours:num(r.querySelector('[data-ch]').value)})).filter(k=>k.ceCatId)};
       if(!o.name)return;
       if(isNew)S.certs.push(o);else S.certs[S.certs.findIndex(x=>x.id===c.id)]=o;

@@ -43,6 +43,13 @@ h1{font-size:22px;margin:0;font-weight:700}
 .group{margin-bottom:22px}
 .group h2{font-size:15px;margin:0 0 10px;display:flex;align-items:center;gap:8px}
 .group h2 .meta{font-weight:400}
+.ghead{all:unset;cursor:pointer;display:flex;align-items:center;gap:8px;padding:4px 8px 4px 4px;margin-left:-4px;border-radius:8px}
+.ghead:hover{background:#eaecf0}
+.ghead:focus-visible{outline:2px solid var(--pri);outline-offset:2px}
+.chev{width:16px;height:16px;transition:transform .15s;color:var(--sub)}
+.group.closed .chev{transform:rotate(-90deg)}
+.group.closed h2{margin-bottom:0}
+.gsum{display:inline-flex;gap:6px;margin-left:4px}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:10px;border-top:4px solid var(--cc,#d0d5dd)}
 .card h3{margin:0;font-size:16px}
@@ -114,13 +121,14 @@ textarea{min-height:70px;resize:vertical}
    https://docs.google.com/spreadsheets/d/XXXXXXXX/copy            */
 const CONFIG={templateCopyUrl:'https://docs.google.com/spreadsheets/d/10ETr_gafGs3WE2xMw7jzilB_Ycc3KT6iVP4IMHu0hbY/copy'};
 
-const LS='certmgr-v2', LS_URL='certmgr-sheet-url';
+const LS='certmgr-v2', LS_URL='certmgr-sheet-url', LS_COL='certmgr-collapsed';
 const COLORS=['#2f6fed','#12805c','#c4320a','#7a5af8','#b54708','#0e9384','#dd2590','#667085'];
 const defCertCats=()=>[{id:'g1',name:'運動指導',color:'#2f6fed'},{id:'g2',name:'急救救生',color:'#c4320a'},{id:'g3',name:'醫療防護',color:'#12805c'},{id:'g4',name:'其他',color:'#667085'}];
 const defCeCats=()=>[{id:'k1',name:'專業課程'},{id:'k2',name:'一般課程'},{id:'k3',name:'法規／倫理'}];
 const blank=()=>({certs:[],records:[],certCats:defCertCats(),ceCats:defCeCats(),lastBackup:'',updatedAt:''});
 let S=blank(), storageOK=true, tab='overview', fCert='', fYear='', fCe='', fGroup='';
 /* mode: 'local'＝只存本機；'sheet'＝連結 Google Sheet */
+let collapsed=new Set((()=>{try{return JSON.parse(localStorage.getItem(LS_COL)||'[]')}catch(e){return []}})());
 let mode='local', sheetUrl='', sheetLink='', sync='idle', syncAt='', syncErr='', pushing=false, dirty=false, pushTimer=null;
 
 /* ---------- 本機 ---------- */
@@ -284,7 +292,13 @@ function overview(inf,soon){
   const groups=[...S.certCats.map(g=>({g,items:inf.filter(([c])=>c.catId===g.id)})),{g:null,items:inf.filter(([c])=>!gcat(c.catId))}]
     .filter(x=>x.items.length).filter(x=>!fGroup||(fGroup==='_none'?!x.g:x.g&&x.g.id===fGroup));
   const single=groups.length===1&&!used.length;
-  return up+chips+groups.map(x=>`<div class="group">${single?'':`<h2>${x.g?`<span class="dot" style="background:${esc(x.g.color)}"></span>${esc(x.g.name)}`:'未分類'} <span class="meta">${x.items.length} 張</span></h2>`}<div class="grid">${sortL(x.items).map(([c,i])=>card(c,i)).join('')}</div></div>`).join('');
+  return up+chips+groups.map(x=>{
+    const key=x.g?x.g.id:'_none', closed=!single&&collapsed.has(key);
+    const nBad=x.items.filter(([c,i])=>i.cls==='p-bad').length, nWarn=x.items.filter(([c,i])=>i.cls==='p-warn').length;
+    const sum=closed?`<span class="gsum">${nBad?`<span class="pill p-bad">${nBad} 張需處理</span>`:''}${nWarn?`<span class="pill p-warn">${nWarn} 張即將到期</span>`:''}</span>`:'';
+    const head=single?'':`<h2><button class="ghead" data-collapse="${key}" aria-expanded="${!closed}"><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"></path></svg>${x.g?`<span class="dot" style="background:${esc(x.g.color)}"></span>${esc(x.g.name)}`:'未分類'} <span class="meta">${x.items.length} 張</span></button>${sum}</h2>`;
+    return `<div class="group ${closed?'closed':''}">${head}${closed?'':`<div class="grid">${sortL(x.items).map(([c,i])=>card(c,i)).join('')}</div>`}</div>`;
+  }).join('');
 }
 function card(c,i){
   const g=gcat(c.catId);
@@ -509,6 +523,7 @@ function connectForm(){
 document.addEventListener('click',e=>{
   const t=e.target.closest('[data-tab]');if(t){tab=t.dataset.tab;render();return}
   const g=e.target.closest('[data-g]');if(g){fGroup=g.dataset.g;render();return}
+  const cl=e.target.closest('[data-collapse]');if(cl){const k=cl.dataset.collapse;collapsed.has(k)?collapsed.delete(k):collapsed.add(k);lsSet(LS_COL,JSON.stringify([...collapsed]));render();const b=document.querySelector(`[data-collapse="${k}"]`);b&&b.focus();return}
   const a=e.target.closest('[data-a]');if(!a)return;const id=a.dataset.id;
   ({newcert:()=>certForm(),editcert:()=>certForm(S.certs.find(c=>c.id===id)),newrec:()=>recForm(null,id),editrec:()=>recForm(S.records.find(r=>r.id===id)),
     renew:()=>renewForm(S.certs.find(c=>c.id===id)),connect:connectForm,retry:()=>push(),reload:()=>{closeModal();loadSheet()},viewrecs:()=>{fCert=id;fYear='';fCe='';tab='records';render()},data:dataForm,settings:settingsForm})[a.dataset.a]?.();
